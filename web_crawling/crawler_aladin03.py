@@ -34,37 +34,64 @@ t.sleep(2)
 
 
 with codecs.open(file_path, mode='w', encoding='utf-8') as f:
-    # selenium으로 현재 페이지의 html 소스 코드를 전부 불러오기
-    src = driver.page_source
 
-    soup = BeautifulSoup(src, 'html.parser')
+    cur_page_num = 2 # 현재 페이지 번호
+    target_page_num = 9 # 목적지 페이지 번호
+    rank = 1 # 순위
 
-    div_list = soup.find_all('div', class_='ss_book_box')
+    while cur_page_num <= target_page_num:
+        # selenium으로 현재 페이지의 html 소스 코드를 전부 불러오기
+        src = driver.page_source
 
-    rank = 1
+        soup = BeautifulSoup(src, 'html.parser')
 
-    for div in div_list:
-        book_info = div.find_all('li')
+        div_list = soup.find_all('div', class_='ss_book_box')
+        # div_list = soup.select('div.ss_book_box') -> 가능
 
-        if book_info[0].find('span', class_='ss_ht1') == None:
-            # 첫번째 li에 span class="ss_ht1"이 없다면 (사은품 없는 책)
-            book_title = book_info[0].text 
-            book_author = book_info[1].text
-            book_price = book_info[2].text
-        else:
-            # 사은품 있는 책 (span class="ss_ht1"이 존재함)
-            book_title = book_info[1].text 
-            book_author = book_info[2].text
-            book_price = book_info[3].text
+        for div in div_list:
+            book_info = div.find_all('li')
 
-        auth_info = book_author.split(' | ')
+            if book_info[0].find('span', class_='ss_ht1') == None:
+                # 첫번째 li에 span class="ss_ht1"이 없다면 (사은품 없는 책)
+                book_title = book_info[0].text 
+                book_author = book_info[1].text
+                book_price = book_info[2].text
+            else:
+                # 사은품 있는 책 (span class="ss_ht1"이 존재함)
+                book_title = book_info[1].text 
+                book_author = book_info[2].text
+                book_price = book_info[3].text
 
-        f.write(f'# 순위: {rank}위\n')
-        f.write(f'# 제목: {book_title}\n')
-        f.write(f'# 저자: {auth_info[0]}\n')
-        f.write(f'# 출판사: {auth_info[1]}\n')
-        f.write(f'# 출판년월: {auth_info[2]}\n')
-        f.write(f'# 가격: {book_price.split(", ")[0]}\n')
-        f.write('-' * 40 + '\n')
+            auth_info = book_author.split(' | ')
 
-        rank += 1
+            f.write(f'# 순위: {rank}위\n')
+            f.write(f'# 제목: {book_title}\n')
+            f.write(f'# 저자: {auth_info[0]}\n')
+            f.write(f'# 출판사: {auth_info[1]}\n')
+            f.write(f'# 출판년월: {auth_info[2]}\n')
+            f.write(f'# 가격: {book_price.split(", ")[0]}\n')
+            f.write('-' * 40 + '\n')
+
+            rank += 1
+        
+        # 다음 페이지로 전환
+        cur_page_num += 1
+        driver.find_element(By.XPATH, f'//*[@id="newbg_body"]/div[3]/ul/li[{cur_page_num}]/a').click()
+        t.sleep(3)
+
+'''
+find: 조건에 맞는 첫 번째 요소를 반환합니다.
+find_all: 조건에 맞는 모든 요소를 리스트 형태로 반환합니다.
+select: CSS 선택자를 사용해 요소를 선택합니다.
+select_one: CSS 선택자를 사용해 첫 번째 요소를 선택합니다.
+find_parent: 해당 요소의 부모 요소를 반환합니다.
+find_parents: 조건에 맞는 모든 부모 요소를 리스트 형태로 반환합니다.
+find_next_sibling: 다음 형제 요소를 반환합니다.
+find_next_siblings: 조건에 맞는 모든 다음 형제 요소를 리스트 형태로 반환합니다.
+find_previous_sibling: 이전 형제 요소를 반환합니다.
+find_previous_siblings: 조건에 맞는 모든 이전 형제 요소를 리스트 형태로 반환합니다.
+find_next: 다음 요소를 반환합니다.
+find_all_next: 조건에 맞는 모든 다음 요소를 리스트 형태로 반환합니다.
+find_previous: 이전 요소를 반환합니다.
+find_all_previous: 조건에 맞는 모든 이전 요소를 리스트 형태로 반환합니다.
+'''
